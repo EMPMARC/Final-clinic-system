@@ -28,7 +28,7 @@ function ConfirmFollowUpPage() {
         previousAppointmentRef: previousAppointment
       });
 
-      const response = await fetch(`${API_URL}/api/save-appointment`, {
+      const response = await fetch(`${config.API_URL}/api/save-appointment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

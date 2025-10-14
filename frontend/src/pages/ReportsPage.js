@@ -1,3 +1,4 @@
+import config from '../config';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -16,7 +17,7 @@ const ReportsPage = () => {
     setSuccess(prev => ({ ...prev, [reportType]: '' }));
 
     try {
-      const response = await axios.post(`http://localhost:5001/api/${reportType}`, {}, {
+      const response = await axios.post(`http://${config.API_URL}/api/${reportType}`, {}, {
         responseType: 'blob'
       });
 

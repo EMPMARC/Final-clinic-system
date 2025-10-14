@@ -1,3 +1,4 @@
+import config from '../config';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,7 +19,7 @@ const MySubmissionsPage = () => {
           return;
         }
 
-        const response = await fetch(`http://localhost:5001/api/student-appointments/${studentNumber}`);
+        const response = await fetch(`http://${config.API_URL}/api/student-appointments/${studentNumber}`);
         const data = await response.json();
         
         if (response.ok) {

@@ -1,3 +1,4 @@
+import config from '../config';
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +24,7 @@ const PatientDashboard = () => {
         
         const onboardingData = await onboardingResponse.json();
         
-        const porResponse = await fetch(`http://localhost:5001/api/student-files/${studentNumber}`);
+       const porResponse = await fetch(`${config.API_URL}/api/student-files/${studentNumber}`);
         const porData = await porResponse.json();
         
         if (onboardingResponse.ok && porResponse.ok) {

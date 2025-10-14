@@ -17,7 +17,7 @@ const ConfirmBooking = () => {
     }
     const check = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/check-por`, {
+        const res = await fetch(`${config.API_URL}/api/check-por`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ studentNumber })

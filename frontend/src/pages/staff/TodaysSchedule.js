@@ -1,3 +1,4 @@
+import config from '../../config';
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -14,7 +15,7 @@ export default function TodaysSchedule() {
   const fetchTodaysSchedule = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5001/api/today-staff-schedule");
+      const response = await axios.get(`http://${config.API_URL}/api/today-staff-schedule`);
       setSchedule(response.data.schedule);
       setDate(response.data.date);
       setError("");

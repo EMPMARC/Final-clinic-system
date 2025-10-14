@@ -14,7 +14,7 @@ const RegistrationCapturePage = () => {
   // Wrap fetchUploadedFiles with useCallback to memoize it
   const fetchUploadedFiles = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/student-files/${studentNumber}`);
+      const response = await fetch(`http://${config.API_URL}/api/student-files/${studentNumber}`);
       const data = await response.json();
       
       if (data.files) {
