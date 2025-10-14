@@ -39,7 +39,7 @@ function App() {
       <Route
         path="/patient-dashboard"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <PatientDashboard />
           </ProtectedRoute>
         }
@@ -47,7 +47,7 @@ function App() {
       <Route
         path="/onboarding"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <OnboardingPage />
           </ProtectedRoute>
         }
@@ -55,7 +55,7 @@ function App() {
       <Route
         path="/upload-proof"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <RegistrationCapturePage />
           </ProtectedRoute>
         }
@@ -63,7 +63,7 @@ function App() {
       <Route
         path="/booking"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <BookingPage />
           </ProtectedRoute>
         }
@@ -71,7 +71,7 @@ function App() {
       <Route
         path="/confirm-booking"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <ConfirmBookingPage />
           </ProtectedRoute>
         }
@@ -79,7 +79,7 @@ function App() {
       <Route
         path="/health-wellness-booking"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <HealthAndWellnessPage />
           </ProtectedRoute>
         }
@@ -87,7 +87,7 @@ function App() {
       <Route
         path="/follow-up-booking"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <FollowUpBookingPage />
           </ProtectedRoute>
         }
@@ -95,7 +95,7 @@ function App() {
       <Route
         path="/confirm-follow-up"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <ConfirmFollowUpBooking />
           </ProtectedRoute>
         }
@@ -103,7 +103,7 @@ function App() {
       <Route
         path="/submitted"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <SubmittedPage />
           </ProtectedRoute>
         }
@@ -111,7 +111,7 @@ function App() {
       <Route
         path="/my-submissions"
         element={
-          <ProtectedRoute requiredRole="patient">
+          <ProtectedRoute requiredRole="student">
             <MySubmissionsPage />
           </ProtectedRoute>
         }

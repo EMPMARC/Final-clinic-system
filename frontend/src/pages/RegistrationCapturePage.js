@@ -1,3 +1,4 @@
+import config from '../config';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -72,7 +73,7 @@ const RegistrationCapturePage = () => {
     formData.append('studentNumber', studentNumber);
 
     try {
-      const response = await fetch('http://localhost:5001/api/upload-por-multer', {
+      const response = await fetch(`${config.API_URL}/api/upload-por-multer`, {
         method: 'POST',
         body: formData,
       });
@@ -108,7 +109,7 @@ const RegistrationCapturePage = () => {
 
   const handleDownload = async (fileId, fileName) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/download-file/${fileId}`);
+      const response = await fetch(`${config.API_URL}/api/download-file/${fileId}`);
       
       if (response.ok) {
         const blob = await response.blob();

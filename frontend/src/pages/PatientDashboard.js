@@ -13,7 +13,7 @@ const PatientDashboard = () => {
     // Check current onboarding and POR status (in case they were updated elsewhere)
     const checkCurrentStatus = async () => {
       try {
-        const onboardingResponse = await fetch('http://localhost:5001/api/check-onboarding', {
+        const onboardingResponse = await fetch(`${config.API_URL}/api/check-onboarding`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

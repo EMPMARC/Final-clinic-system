@@ -1,3 +1,4 @@
+import config from '../config';
 import React, { useMemo, useState, useEffect } from "react";
 import {
 LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,

@@ -1,3 +1,4 @@
+import config from '../config';
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -27,7 +28,7 @@ function ConfirmFollowUpPage() {
         previousAppointmentRef: previousAppointment
       });
 
-      const response = await fetch('http://localhost:5001/api/save-appointment', {
+      const response = await fetch(`${API_URL}/api/save-appointment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

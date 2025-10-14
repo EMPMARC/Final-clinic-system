@@ -1,3 +1,4 @@
+import config from '../../config';
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -111,7 +112,7 @@ const EmergencyOnboardingPage = () => {
 
       console.log('Submitting emergency report:', submissionData);
 
-      const response = await fetch('http://localhost:5001/api/emergency-onboarding', {
+      const response = await fetch(`${config.API_URL}/api/emergency-onboarding`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

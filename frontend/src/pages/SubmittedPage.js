@@ -1,3 +1,4 @@
+import config from '../config';
 import React from "react";
 import { useNavigate } from "react-router-dom";
 

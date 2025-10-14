@@ -1,3 +1,4 @@
+import config from '../config';
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -72,7 +73,7 @@ function OnboardingPage() {
 
   const checkIfOnboarded = async (studentNumber) => {
     try {
-      const response = await fetch('http://localhost:5001/api/check-onboarding', {
+      const response = await fetch(`${config.API_URL}/api/check-onboarding`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +178,7 @@ function OnboardingPage() {
       console.log("Sending data:", dataToSend);
       
       // Send data to backend
-      const response = await fetch('http://localhost:5001/api/onboarding', {
+      const response = await fetch(`${config.API_URL}/api/onboarding`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

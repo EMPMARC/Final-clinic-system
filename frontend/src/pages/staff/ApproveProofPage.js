@@ -1,3 +1,4 @@
+import config from '../../config';
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -22,7 +23,7 @@ const ApproveProofPage = () => {
     }
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5001/api/por/${encodeURIComponent(studentNumberInput.trim())}`);
+      const res = await fetch(`${config.API_URL}/api/por/${encodeURIComponent(studentNumberInput.trim())}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "POR not found for this student");
@@ -41,7 +42,7 @@ const ApproveProofPage = () => {
     setDecisionLoading(true);
     setError("");
     try {
-      const res = await fetch(`http://localhost:5001/api/por/${encodeURIComponent(por.student_number)}/decision`, {
+      const res = await fetch(`${config.API_URL}/api/por/${encodeURIComponent(por.student_number)}/decision`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ decision: next })
@@ -117,7 +118,7 @@ const ApproveProofPage = () => {
             
             <div className="por-actions">
               <a
-                href={`http://localhost:5001/api/download-file/${por.id}`}
+                href={`${config.API_URL}/api/download-file/${por.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="action-button secondary"

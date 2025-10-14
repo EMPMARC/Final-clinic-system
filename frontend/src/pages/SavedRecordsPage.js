@@ -1,3 +1,4 @@
+import config from '../config';
 import React, { useState } from "react";
 
 const SavedRecordsPage = () => {
