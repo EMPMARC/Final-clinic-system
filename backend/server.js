@@ -2160,30 +2160,431 @@ app.get('/report', (req, res) => {
 });
 
 // 🔹 Report 1: Appointments (Line Chart: Bookings vs Emergencies)
-app.post('/report1', (req, res) => {
-  res.status(200).json({ message: 'Report generation temporarily disabled for PostgreSQL compatibility' });
+
+app.post('/report1', async (req, res) => {
+  try {
+    const { from, to } = req.body;
+    
+    // Fetch appointments data
+    const appointmentsSql = `
+      SELECT 
+        DATE(appointment_date) as date,
+        COUNT(*) as count,
+        appointment_type
+      FROM appointments
+      WHERE appointment_date BETWEEN $1 AND $2
+      GROUP BY DATE(appointment_date), appointment_type
+      ORDER BY date
+    `;
+    
+    const result = await db.query(appointmentsSql, [from, to]);
+    const appointmentsData = result.rows;
+    
+    // Create PDF
+    const doc = new PDFDocument({ margin: 50 });
+    const filename = `appointments-report-${Date.now()}.pdf`;
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    doc.pipe(res);
+    
+    // Title
+    doc.fontSize(20).text('Appointments Report', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(12).text(`Period: ${from} to ${to}`, { align: 'center' });
+    doc.moveDown(2);
+    
+    // Summary stats
+    const totalAppointments = appointmentsData.reduce((sum, row) => sum + parseInt(row.count), 0);
+    doc.fontSize(14).text(`Total Appointments: ${totalAppointments}`);
+    doc.moveDown();
+    
+    // Create chart data
+    if (appointmentsData.length > 0) {
+      const dates = [...new Set(appointmentsData.map(d => d.date))];
+      const chartData = {
+        labels: dates.map(d => new Date(d).toLocaleDateString()),
+        datasets: [{
+          label: 'Appointments',
+          data: dates.map(date => {
+            const dayData = appointmentsData.filter(a => a.date === date);
+            return dayData.reduce((sum, row) => sum + parseInt(row.count), 0);
+          }),
+          backgroundColor: 'rgba(59, 130, 246, 0.5)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          borderWidth: 2
+        }]
+      };
+      
+      const configuration = {
+        type: 'line',
+        data: chartData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            title: { display: true, text: 'Appointments Over Time' }
+          }
+        }
+      };
+      
+      const imageBuffer = await chartJSNodeCanvas.renderToBuffer(configuration);
+      doc.image(imageBuffer, 50, doc.y, { width: 500 });
+      doc.moveDown(15);
+    }
+    
+    // Table
+    if (appointmentsData.length > 0) {
+      doc.addPage();
+      doc.fontSize(16).text('Detailed Breakdown', { align: 'left' });
+      doc.moveDown();
+      
+      drawTable(
+        doc,
+        ['Date', 'Type', 'Count'],
+        appointmentsData.map(row => [
+          new Date(row.date).toLocaleDateString(),
+          row.appointment_type,
+          row.count.toString()
+        ]),
+        [50, 200, 450]
+      );
+    }
+    
+    doc.end();
+  } catch (error) {
+    console.error('Error generating report 1:', error);
+    res.status(500).json({ error: 'Failed to generate report', details: error.message });
+  }
 });
 
-// 🔹 Report 2: Emergencies (Pie Chart + Table)
-app.post('/report2', (req, res) => {
-  res.status(200).json({ message: 'Report generation temporarily disabled for PostgreSQL compatibility' });
+
+app.post('/report2', async (req, res) => {
+  try {
+    const { from, to } = req.body;
+    
+    // Fetch emergencies data
+    const emergenciesSql = `
+      SELECT 
+        DATE(date) as date,
+        COUNT(*) as count,
+        problem_nature
+      FROM Emergencies
+      WHERE date BETWEEN $1 AND $2
+      GROUP BY DATE(date), problem_nature
+      ORDER BY date
+    `;
+    
+    const result = await db.query(emergenciesSql, [from, to]);
+    const emergenciesData = result.rows;
+    
+    // Create PDF
+    const doc = new PDFDocument({ margin: 50 });
+    const filename = `emergencies-report-${Date.now()}.pdf`;
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    doc.pipe(res);
+    
+    // Title
+    doc.fontSize(20).text('Emergency Cases Report', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(12).text(`Period: ${from} to ${to}`, { align: 'center' });
+    doc.moveDown(2);
+    
+    // Summary
+    const totalEmergencies = emergenciesData.reduce((sum, row) => sum + parseInt(row.count), 0);
+    doc.fontSize(14).text(`Total Emergency Cases: ${totalEmergencies}`);
+    doc.moveDown(2);
+    
+    // Table
+    if (emergenciesData.length > 0) {
+      drawTable(
+        doc,
+        ['Date', 'Nature', 'Count'],
+        emergenciesData.map(row => [
+          new Date(row.date).toLocaleDateString(),
+          row.problem_nature.substring(0, 50),
+          row.count.toString()
+        ]),
+        [50, 200, 450]
+      );
+    } else {
+      doc.text('No emergency cases in this period.');
+    }
+    
+    doc.end();
+  } catch (error) {
+    console.error('Error generating report 2:', error);
+    res.status(500).json({ error: 'Failed to generate report', details: error.message });
+  }
 });
 
-app.post('/report3', (req, res) => {
-  res.status(200).json({ message: 'Report generation temporarily disabled for PostgreSQL compatibility' });
+app.post('/report3', async (req, res) => {
+  try {
+    const { from, to } = req.body;
+    
+    // Fetch POR data
+    const porSql = `
+      SELECT 
+        DATE(uploaded_at) as date,
+        COUNT(*) as total,
+        SUM(CASE WHEN approval_status = 'approved' THEN 1 ELSE 0 END) as approved,
+        SUM(CASE WHEN approval_status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+        SUM(CASE WHEN approval_status = 'pending' THEN 1 ELSE 0 END) as pending
+      FROM por_uploads
+      WHERE uploaded_at BETWEEN $1 AND $2
+      GROUP BY DATE(uploaded_at)
+      ORDER BY date
+    `;
+    
+    const result = await db.query(porSql, [from, to]);
+    const porData = result.rows;
+    
+    // Create PDF
+    const doc = new PDFDocument({ margin: 50 });
+    const filename = `por-report-${Date.now()}.pdf`;
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    doc.pipe(res);
+    
+    // Title
+    doc.fontSize(20).text('Proof of Registration Report', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(12).text(`Period: ${from} to ${to}`, { align: 'center' });
+    doc.moveDown(2);
+    
+    // Summary
+    const totalUploads = porData.reduce((sum, row) => sum + parseInt(row.total), 0);
+    const totalApproved = porData.reduce((sum, row) => sum + parseInt(row.approved), 0);
+    const totalRejected = porData.reduce((sum, row) => sum + parseInt(row.rejected), 0);
+    const totalPending = porData.reduce((sum, row) => sum + parseInt(row.pending), 0);
+    
+    doc.fontSize(14).text(`Total Uploads: ${totalUploads}`);
+    doc.text(`Approved: ${totalApproved}`);
+    doc.text(`Rejected: ${totalRejected}`);
+    doc.text(`Pending: ${totalPending}`);
+    doc.moveDown(2);
+    
+    // Table
+    if (porData.length > 0) {
+      drawTable(
+        doc,
+        ['Date', 'Total', 'Approved', 'Rejected', 'Pending'],
+        porData.map(row => [
+          new Date(row.date).toLocaleDateString(),
+          row.total.toString(),
+          row.approved.toString(),
+          row.rejected.toString(),
+          row.pending.toString()
+        ]),
+        [50, 150, 250, 350, 450]
+      );
+    } else {
+      doc.text('No uploads in this period.');
+    }
+    
+    doc.end();
+  } catch (error) {
+    console.error('Error generating report 3:', error);
+    res.status(500).json({ error: 'Failed to generate report', details: error.message });
+  }
 });
+
 
 // API Report endpoints
-app.post('/api/report1', (req, res) => {
-  res.status(200).json({ message: 'Report generation temporarily disabled for PostgreSQL compatibility' });
+// API Report endpoints
+app.post('/api/report1', async (req, res) => {
+  try {
+    const { from, to } = req.body;
+    
+    const appointmentsSql = `
+      SELECT DATE(appointment_date) as date, COUNT(*) as count, appointment_type
+      FROM appointments WHERE appointment_date BETWEEN $1 AND $2
+      GROUP BY DATE(appointment_date), appointment_type ORDER BY date
+    `;
+    
+    const result = await db.query(appointmentsSql, [from, to]);
+    const appointmentsData = result.rows;
+    
+    const doc = new PDFDocument({ margin: 50 });
+    const filename = `appointments-report-${Date.now()}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    doc.pipe(res);
+    
+    doc.fontSize(20).text('Appointments Report', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(12).text(`Period: ${from} to ${to}`, { align: 'center' });
+    doc.moveDown(2);
+    
+    const totalAppointments = appointmentsData.reduce((sum, row) => sum + parseInt(row.count), 0);
+    doc.fontSize(14).text(`Total Appointments: ${totalAppointments}`);
+    doc.moveDown();
+    
+    if (appointmentsData.length > 0) {
+      const dates = [...new Set(appointmentsData.map(d => d.date))];
+      const chartData = {
+        labels: dates.map(d => new Date(d).toLocaleDateString()),
+        datasets: [{
+          label: 'Appointments',
+          data: dates.map(date => {
+            const dayData = appointmentsData.filter(a => a.date === date);
+            return dayData.reduce((sum, row) => sum + parseInt(row.count), 0);
+          }),
+          backgroundColor: 'rgba(59, 130, 246, 0.5)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          borderWidth: 2
+        }]
+      };
+      
+      const configuration = {
+        type: 'line',
+        data: chartData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            title: { display: true, text: 'Appointments Over Time' }
+          }
+        }
+      };
+      
+      const imageBuffer = await chartJSNodeCanvas.renderToBuffer(configuration);
+      doc.image(imageBuffer, 50, doc.y, { width: 500 });
+      doc.moveDown(15);
+      
+      doc.addPage();
+      doc.fontSize(16).text('Detailed Breakdown', { align: 'left' });
+      doc.moveDown();
+      
+      drawTable(doc, ['Date', 'Type', 'Count'],
+        appointmentsData.map(row => [
+          new Date(row.date).toLocaleDateString(),
+          row.appointment_type,
+          row.count.toString()
+        ]),
+        [50, 200, 450]
+      );
+    }
+    
+    doc.end();
+  } catch (error) {
+    console.error('Error generating report 1:', error);
+    res.status(500).json({ error: 'Failed to generate report', details: error.message });
+  }
 });
 
-app.post('/api/report2', (req, res) => {
-  res.status(200).json({ message: 'Report generation temporarily disabled for PostgreSQL compatibility' });
+app.post('/api/report2', async (req, res) => {
+  try {
+    const { from, to } = req.body;
+    
+    const emergenciesSql = `
+      SELECT DATE(date) as date, COUNT(*) as count, problem_nature
+      FROM Emergencies WHERE date BETWEEN $1 AND $2
+      GROUP BY DATE(date), problem_nature ORDER BY date
+    `;
+    
+    const result = await db.query(emergenciesSql, [from, to]);
+    const emergenciesData = result.rows;
+    
+    const doc = new PDFDocument({ margin: 50 });
+    const filename = `emergencies-report-${Date.now()}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    doc.pipe(res);
+    
+    doc.fontSize(20).text('Emergency Cases Report', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(12).text(`Period: ${from} to ${to}`, { align: 'center' });
+    doc.moveDown(2);
+    
+    const totalEmergencies = emergenciesData.reduce((sum, row) => sum + parseInt(row.count), 0);
+    doc.fontSize(14).text(`Total Emergency Cases: ${totalEmergencies}`);
+    doc.moveDown(2);
+    
+    if (emergenciesData.length > 0) {
+      drawTable(doc, ['Date', 'Nature', 'Count'],
+        emergenciesData.map(row => [
+          new Date(row.date).toLocaleDateString(),
+          row.problem_nature.substring(0, 50),
+          row.count.toString()
+        ]),
+        [50, 200, 450]
+      );
+    } else {
+      doc.text('No emergency cases in this period.');
+    }
+    
+    doc.end();
+  } catch (error) {
+    console.error('Error generating report 2:', error);
+    res.status(500).json({ error: 'Failed to generate report', details: error.message });
+  }
 });
 
-app.post('/api/report3', (req, res) => {
-  res.status(200).json({ message: 'Report generation temporarily disabled for PostgreSQL compatibility' });
+app.post('/api/report3', async (req, res) => {
+  try {
+    const { from, to } = req.body;
+    
+    const porSql = `
+      SELECT DATE(uploaded_at) as date, COUNT(*) as total,
+      SUM(CASE WHEN approval_status = 'approved' THEN 1 ELSE 0 END) as approved,
+      SUM(CASE WHEN approval_status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+      SUM(CASE WHEN approval_status = 'pending' THEN 1 ELSE 0 END) as pending
+      FROM por_uploads WHERE uploaded_at BETWEEN $1 AND $2
+      GROUP BY DATE(uploaded_at) ORDER BY date
+    `;
+    
+    const result = await db.query(porSql, [from, to]);
+    const porData = result.rows;
+    
+    const doc = new PDFDocument({ margin: 50 });
+    const filename = `por-report-${Date.now()}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    doc.pipe(res);
+    
+    doc.fontSize(20).text('Proof of Registration Report', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(12).text(`Period: ${from} to ${to}`, { align: 'center' });
+    doc.moveDown(2);
+    
+    const totalUploads = porData.reduce((sum, row) => sum + parseInt(row.total), 0);
+    const totalApproved = porData.reduce((sum, row) => sum + parseInt(row.approved), 0);
+    const totalRejected = porData.reduce((sum, row) => sum + parseInt(row.rejected), 0);
+    const totalPending = porData.reduce((sum, row) => sum + parseInt(row.pending), 0);
+    
+    doc.fontSize(14).text(`Total Uploads: ${totalUploads}`);
+    doc.text(`Approved: ${totalApproved}`);
+    doc.text(`Rejected: ${totalRejected}`);
+    doc.text(`Pending: ${totalPending}`);
+    doc.moveDown(2);
+    
+    if (porData.length > 0) {
+      drawTable(doc, ['Date', 'Total', 'Approved', 'Rejected', 'Pending'],
+        porData.map(row => [
+          new Date(row.date).toLocaleDateString(),
+          row.total.toString(),
+          row.approved.toString(),
+          row.rejected.toString(),
+          row.pending.toString()
+        ]),
+        [50, 150, 250, 350, 450]
+      );
+    } else {
+      doc.text('No uploads in this period.');
+    }
+    
+    doc.end();
+  } catch (error) {
+    console.error('Error generating report 3:', error);
+    res.status(500).json({ error: 'Failed to generate report', details: error.message });
+  }
 });
 
 // API Endpoint: Get onboarding data for reports
