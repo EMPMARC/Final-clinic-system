@@ -46,7 +46,35 @@ db.query('SELECT NOW()', (err, result) => {
   ensurePorTableExists(() => ensurePorApprovalColumns());
   // Ensure Emergencies table exists at startup
   ensureEmergenciesTableExists();
+  ensureAppointmentsTableExists();
 });
+// Ensure Appointments table exists (idempotent)
+function ensureAppointmentsTableExists(callback) {
+  const createSql = `
+    CREATE TABLE IF NOT EXISTS appointments (
+      id SERIAL PRIMARY KEY,
+      reference_number VARCHAR(50) NOT NULL,
+      student_number VARCHAR(50) NOT NULL,
+      appointment_type VARCHAR(100) NOT NULL,
+      appointment_for VARCHAR(100) NOT NULL,
+      appointment_date DATE NULL,
+      appointment_time TIME NOT NULL,
+      previous_appointment_ref VARCHAR(50) NULL,
+      status VARCHAR(20) DEFAULT 'scheduled',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+  
+  db.query(createSql, (err) => {
+    if (err) {
+      console.error('Error ensuring Appointments table exists:', err);
+    } else {
+      console.log('Appointments table is ready');
+    }
+    if (typeof callback === 'function') callback();
+  });
+}
 
 // Chart canvas setup
 const width = 600;
