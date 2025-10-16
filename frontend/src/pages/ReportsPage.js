@@ -17,7 +17,7 @@ const ReportsPage = () => {
     setSuccess(prev => ({ ...prev, [reportType]: '' }));
 
     try {
-      const response = await axios.post(`http://${config.API_URL}/api/${reportType}`, {}, {
+      const response = await axios.post(`${config.API_URL}/api/${reportType}`, {}, {
         responseType: 'blob'
       });
 

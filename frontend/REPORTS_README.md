@@ -17,7 +17,7 @@ The CHWC (Campus Health and Wellness Center) system now includes comprehensive P
 ## How to Use
 
 ### Option 1: Standalone HTML Interface
-1. Navigate to `http://${config.API_URL}/report`
+1. Navigate to `${config.API_URL}/report`
 2. Click on any report type to generate and download the PDF
 3. Reports will automatically download to your default downloads folder
 
@@ -33,13 +33,13 @@ You can also call the report endpoints directly:
 
 ```bash
 # Generate appointments report
-curl -X POST http://${config.API_URL}/api/report1 -o appointments_report.pdf
+curl -X POST ${config.API_URL}/api/report1 -o appointments_report.pdf
 
 # Generate emergency report
-curl -X POST http://${config.API_URL}/api/report2 -o emergency_report.pdf
+curl -X POST ${config.API_URL}/api/report2 -o emergency_report.pdf
 
 # Generate POR report
-curl -X POST http://${config.API_URL}/api/report3 -o por_report.pdf
+curl -X POST ${config.API_URL}/api/report3 -o por_report.pdf
 ```
 
 ## Report Details
@@ -90,7 +90,7 @@ node server.js
 ```
 
 3. Access the reports through:
-   - HTML interface: `http://${config.API_URL}/report`
+   - HTML interface: `${config.API_URL}/report`
    - React interface: Login as admin and navigate to "View Reports"
 
 ## Error Handling

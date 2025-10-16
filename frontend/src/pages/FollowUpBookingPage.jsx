@@ -24,7 +24,7 @@ function FollowUpBooking() {
 
       try {
         setLoading(true);
-        const response = await fetch(`http://${config.API_URL}/api/student-appointments/${studentNumber}`);
+        const response = await fetch(`${config.API_URL}/api/student-appointments/${studentNumber}`);
         const data = await response.json();
 
         if (!response.ok) {
